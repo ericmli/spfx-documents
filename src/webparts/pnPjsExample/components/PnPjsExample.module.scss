@@ -31,3 +31,17 @@
   align-items: center;
   justify-content: space-between;
 }
+
+.breadcrump {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+.breadcrump p {
+  cursor: pointer;
+}
+
+.breadcrump p:last-child {
+  font-weight: bold;
+}

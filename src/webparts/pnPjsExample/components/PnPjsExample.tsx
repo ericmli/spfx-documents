@@ -23,19 +23,20 @@ interface ItemFile {
 export default function PnPjsExample(props: IPnPjsExampleProps) {
   const [folders, setFolders] = React.useState<ItemFolder []>([])
   const [files, setFiles] = React.useState<ItemFile []>([])
-  const [links, setLinks] = React.useState('')
-  const inicialFolder = 'Documentos Compartilhados'
+  const initialFolder = 'Documentos Compartilhados'
+  const [links, setLinks] = React.useState(initialFolder)
+  const [breadcrump, setBreadcrump] = React.useState([initialFolder])
   
   React.useEffect(() => {
+    console.log(links);
+    
     async function getFolders() {
-      const data = await axios(`${props.site.absoluteUrl}/_api/web/GetFolderByServerRelativeUrl('${inicialFolder}/${links}')/Folders?$select=Name,TimeLastModified,LinkingUrl,StorageMetrics,Properties&$expand=StorageMetrics, Properties/Categoria`).then(res => { return res.data.value})
-      console.log(data);
+      const data = await axios(`${props.site.absoluteUrl}/_api/web/GetFolderByServerRelativeUrl('${links}')/Folders?$select=Name,TimeLastModified,LinkingUrl,StorageMetrics,Properties&$expand=StorageMetrics, Properties/Categoria`).then(res => { return res.data.value})
       setFolders(data)
     }
     getFolders()
     async function getFiles() {
-      const data = await axios(`${props.site.absoluteUrl}/_api/web/GetFolderByServerRelativeUrl('${inicialFolder}/${links}')/Files?$select=Name,UniqueId,ViewsLifeTime,TimeLastModified,LinkingUrl,Length,Categoria,ServerRelativeUrl&$expand=File,Properties/Categoria`).then(res => { return res.data.value})
-      console.log(data);
+      const data = await axios(`${props.site.absoluteUrl}/_api/web/GetFolderByServerRelativeUrl('${links}')/Files?$select=Name,UniqueId,ViewsLifeTime,TimeLastModified,LinkingUrl,Length,Categoria,ServerRelativeUrl&$expand=File,Properties/Categoria`).then(res => { return res.data.value})
       setFiles(data)
     }
     getFiles()
@@ -46,7 +47,7 @@ export default function PnPjsExample(props: IPnPjsExampleProps) {
       <>
       {item.map((elm: ItemFolder, index: number) => {
         return(
-          <div key={index} onClick={() => {setLinks(elm.Name)}} className={styles.files}>
+          <div key={index} onClick={() => {setLinks(links + `/${elm.Name}`);setBreadcrump([...breadcrump, elm.Name])}} className={styles.files}>
             <Icon.FolderFilled fontSize={26}/>
             <p>{elm.Name}</p>
           </div>
@@ -79,17 +80,21 @@ export default function PnPjsExample(props: IPnPjsExampleProps) {
     )
   }
   const Breadcrump = () =>{
-    let arr = [inicialFolder]
-    React.useEffect(() => {
-      arr = [...arr, `${links}/`]
-      console.log(arr);
-      
-    },[links])
+    const Breadcrump = (remove: string) => {
+      const folderPosition = breadcrump.indexOf(remove)
+      const folderRemoved = breadcrump.slice(0, folderPosition + 1)
+      setBreadcrump(folderRemoved)
+
+      // const verifyLink = folderRemoved[folderRemoved.length - 1]
+      const verifyLink = links.replace(new RegExp('\\b' + '/' + remove + '\\b.*', 'i'), '')
+      // setLinks(verifyLink !== initialFolder ? verifyLink : '')
+      setLinks(verifyLink)
+    }
     return(
-      <div>
-        {arr.map((elm: string, index: number) => {
+      <div className={styles.breadcrump}>
+        {breadcrump.map((elm: string, index: number) => {
           return (
-            <p key={index}>{elm}</p>
+            <p key={index} onClick={() => Breadcrump(elm)}>{elm} /</p>
           )
         })}
       </div>
